@@ -28,11 +28,13 @@ void partition(int* L, int left, int right, int p, int* a, int* b) {
     i = left;
     j = right - 1;
     while (i <= j) {
-        if (L[i] < k) {
+        while (L[i] < k) {
             i++;
-        } else if (L[j] > k) {
+        }
+        while (L[j] > k) {
             j--;
-        } else {
+        }
+        if (i <= j) {
             swap(&L[i], &L[j]);
             i++;
             j--;
@@ -61,9 +63,9 @@ int main() {
     int* arr;
     int n;
     srand(time(NULL));
-    
+
     scanf("%d", &n);
-    
+
     arr = (int*)malloc(sizeof(int) * n);
 
     for (int i = 0; i < n; i++) {
