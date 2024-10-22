@@ -28,16 +28,14 @@ void partition(int* L, int left, int right, int p, int* a, int* b) {
     i = left;
     j = right - 1;
     while (i <= j) {
-        while (L[i] < k) {
+        while (i<= j && L[i] < k) {
             i++;
         }
-        while (L[j] > k) {
+        while (i<=j && L[j] > k) {
             j--;
         }
-        if (i <= j) {
+        if (i < j) {
             swap(&L[i], &L[j]);
-            i++;
-            j--;
         }
     }
     swap(&L[i], &L[right]);
