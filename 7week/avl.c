@@ -16,12 +16,31 @@ Node* makeNode() {
     newnode->rightChild = NULL;
     return newnode;
 }
+
 void setData(Node* node, int key) { node->key = key; }
+
 int getData(Node* node) { return node->key; }
-void makeLeftSubTree(Node* root, Node* node) { root->leftChild = node; }
-void makeRightSubTree(Node* root, Node* node) { root->rightChild = node; }
+
+void makeLeftSubTree(Node* root, Node* node) { 
+    root->leftChild = node; 
+}
+
+void makeRightSubTree(Node* root, Node* node){
+    root->rightChild = node;
+}
+
+// void changeLeftSubTree(Node* root, Node* node){
+//     root->leftChild = node;
+// }
+
+// void changeRightSubTree(Node* root, Node* node){
+//     root->rightChild = node;
+// }
+
 Node* getLeftSubTree(Node* root) { return root->leftChild; }
+
 Node* getRightSubTree(Node* root) { return root->rightChild; }
+
 Node* removeLeftSubTree(Node* root) {
     Node* delNode;
     if (root != NULL) {
@@ -30,6 +49,7 @@ Node* removeLeftSubTree(Node* root) {
     }
     return delNode;
 }
+
 Node* removeRightSubTree(Node* root) {
     Node* delNode;
     if (root != NULL) {
@@ -38,6 +58,7 @@ Node* removeRightSubTree(Node* root) {
     }
     return delNode;
 }
+
 void preorder(Node* root) {
     if (root == NULL) {
         return;
@@ -47,35 +68,116 @@ void preorder(Node* root) {
     preorder(root->rightChild);
 }
 
-void BSTInit(Node** root) { *root = NULL; }
-void BSTInsert(Node** root, int key) {
-    Node* cNode = *root;  // current node
-    Node* pNode = NULL;   // cNode 부모노드
-    Node* newNode;        //
+int getHeight(Node* root){ // 높이 구하기
+    int left, right;
 
-    while (cNode != NULL) {         // 빈 공간 찾기
-        if (getData(cNode) == key)  // 중복키
-            return;
-        pNode = cNode;              // 부모를 항상 유지
-        if (key < getData(cNode)) {
-            cNode = getLeftSubTree(cNode);
-        } else {
-            cNode = getRightSubTree(cNode);
-        }
+    if(root == NULL){
+        return 0;
     }
-    newNode = makeNode();
-    setData(newNode, key);
 
-    if (pNode != NULL) {  // 새로운 노드가 루트가 아닌 ㄱ ㅕㅇ우
-        if (key < getData(pNode)) {
-            makeLeftSubTree(pNode, newNode);
-        } else {
-            makeRightSubTree(pNode, newNode);
-        }
-    } else {  // 새로운 노드가 루트인경우
-        *root = newNode;
+    left = getHeight(getLeftSubTree(root));
+    right = getHeight(getRightSubTree(root));
+
+    if(left > right){
+        return left+1;
+    }
+    else{
+        return right+1;
     }
 }
+
+int getHeightDiff(Node* root){ // 높이 차이 계산
+    if(root == NULL){
+        return 0;
+    }
+    int leftH = getHeight(getLeftSubTree(root));
+    int rightH = getHeight(getRightSubTree(root));
+
+    return leftH - rightH; // 왼쪽으로 치우쳐지면 양수, 왼쪽으로 치우쳐지면 음수
+}
+
+Node* rotateLL(Node*root){ // LL 회전
+    Node* pNode = root; // parent node
+    Node* cNode = getLeftSubTree(pNode); // current node
+
+    makeLeftSubTree(pNode,getRightSubTree(cNode));
+    makeRightSubTree(cNode,pNode);
+    return cNode;
+}
+
+Node* rotateRR(Node* root){ // RR 회전
+    Node* pNode = root;// parent node
+    Node* cNode = getRightSubTree(pNode); // current node
+
+    makeRightSubTree(pNode,getLeftSubTree(cNode));
+    makeLeftSubTree(cNode,pNode);
+
+    return cNode;
+}
+
+Node* rotateLR(Node* root){ // LR 회전
+    Node* pNode = root;
+    Node* cNode = getLeftSubTree(pNode);
+
+    makeLeftSubTree(pNode,rotateRR(cNode)); // RR회전 후
+    return rotateLL(pNode); // LL회전
+}
+
+Node* rotateRL(Node* root){
+    Node* pNode = root;
+    Node* cNode = getRightSubTree(pNode);
+
+    makeRightSubTree(pNode, rotateLL(cNode)); // LL회전 후
+    return rotateRR(pNode); // RR 회전
+}
+
+Node* reBalance(Node** root){
+    int diff = getHeightDiff(*root);
+
+    if(diff > 1){ // LL or LR
+        if(getHeightDiff(getLeftSubTree(*root))>0){ // LL
+            *root = rotateLL(*root);
+        }
+        else{ // LR
+            *root = rotateLR(*root);
+        }
+    }
+    if(diff < -1){ // RR or RL
+        if(getHeightDiff(getRightSubTree(*root))<0){ // RR
+            *root = rotateRR(*root);
+        }
+        else{ // RL
+            *root = rotateRL(*root);
+        }
+    }
+
+    return *root;
+}
+
+void BSTInit(Node** root) { *root = NULL; }
+
+Node* BSTInsert(Node** root,int key){
+    if(*root == NULL){ // base case
+        *root = makeNode();
+        setData(*root,key);
+    }
+    else if(key < getData(*root)){
+        Node* left = getLeftSubTree(*root);
+        BSTInsert(&left, key);
+        *root = reBalance(root);
+    }
+    else if(key > getData(*root)){
+        Node* right = getRightSubTree(*root);
+        BSTInsert(&right,key);
+        *root = reBalance(root);
+    }
+    else{
+        return NULL; // 중복 키
+    }
+
+    return *root;
+}
+
 Node* BSTSearch(Node* root, int key) {
     Node* cNode = root;
 
@@ -90,6 +192,7 @@ Node* BSTSearch(Node* root, int key) {
     }
     return NULL;  // no such key
 }
+
 Node* BSTRemove(Node** root, int key) {
     Node* tmpRoot = makeNode();  // 가상 루트
     Node* cNode = *root;         // current node
@@ -170,93 +273,60 @@ Node* BSTRemove(Node** root, int key) {
     }
 
     free(tmpRoot);
+    *root = reBalance(root);
     return delNode;
 }
 
 int main() {
-    // Node* root;
-    // Node* result;
-    // char cal;
-    // int key;
-    // int flag = TRUE;
+    Node* root;
+    Node* result;
+    char cal;
+    int key;
+    int flag = TRUE;
 
-    // BSTInit(&root);
+    BSTInit(&root);
 
-    // while (flag) {
-    //     scanf("%c", &cal);
-    //     getchar();
-    //     switch (cal) {
-    //         case 'i':  // insert
-    //             scanf("%d", &key);
-    //             getchar();
-    //             BSTInsert(&root, key);
-    //             break;
+    while (flag) {
+        scanf("%c", &cal);
+        getchar();
+        switch (cal) {
+            case 'i':  // insert
+                scanf("%d", &key);
+                getchar();
+                BSTInsert(&root, key);
+                break;
 
-    //         case 'd':  // delete
-    //             scanf("%d", &key);
-    //             getchar();
-    //             result = BSTRemove(&root, key);
-    //             if (result == NULL) {  // no such key
-    //                 printf("X\n");
-    //             } else {
-    //                 printf("%d\n", getData(result));
-    //             }
-    //             free(result);
-    //             break;
+            case 'd':  // delete
+                scanf("%d", &key);
+                getchar();
+                result = BSTRemove(&root, key);
+                if (result == NULL) {  // no such key
+                    printf("X\n");
+                } else {
+                    printf("%d\n", getData(result));
+                }
+                free(result);
+                break;
 
-    //         case 's':  // search
-    //             scanf("%d", &key);
-    //             getchar();
-    //             result = BSTSearch(root, key);
-    //             if (result == NULL) {  // no such key
-    //                 printf("X\n");
-    //             } else {
-    //                 printf("%d\n", getData(result));
-    //             }
-    //             break;
+            case 's':  // search
+                scanf("%d", &key);
+                getchar();
+                result = BSTSearch(root, key);
+                if (result == NULL) {  // no such key
+                    printf("X\n");
+                } else {
+                    printf("%d\n", getData(result));
+                }
+                break;
 
-    //         case 'p':  // preorder
-    //             preorder(root);
-    //             printf("\n");
-    //             break;
+            case 'p':  // preorder
+                preorder(root);
+                printf("\n");
+                break;
 
-    //         case 'q':  // quit
-    //             flag = FALSE;
-    //             break;
-    //     }
-    // }
-
-    // Node * avlRoot;
-	// Node * clNode;		// current left node
-	// Node * crNode;		// current right node
-	// BSTInit(&avlRoot);
-
-	// BSTInsert(&avlRoot, 1);
-	// BSTInsert(&avlRoot, 2);
-	// BSTInsert(&avlRoot, 3);
-	// BSTInsert(&avlRoot, 4);
-	// BSTInsert(&avlRoot, 5);
-	// BSTInsert(&avlRoot, 6);
-	// BSTInsert(&avlRoot, 7);
-	// BSTInsert(&avlRoot, 8);
-	// BSTInsert(&avlRoot, 9);
-
-	// printf("��Ʈ ���: %d \n", getData(avlRoot));
-
-	// clNode = getLeftSubTree(avlRoot);
-	// crNode = getRightSubTree(avlRoot);
-	// printf("����1: %d, ������1: %d \n", getData(clNode), getData(crNode));
-
-	// clNode = getLeftSubTree(clNode);
-	// crNode = getRightSubTree(crNode);
-	// printf("����2: %d, ������2: %d \n", getData(clNode), getData(crNode));
-
-	// clNode = getLeftSubTree(clNode);
-	// crNode = getRightSubTree(crNode);
-	// printf("����3: %d, ������3: %d \n", getData(clNode), getData(crNode));
-
-	// clNode = getLeftSubTree(clNode);
-	// crNode = getRightSubTree(crNode);
-	// printf("����4: %d, ������4: %d \n", getData(clNode), getData(crNode));
-	return 0;
+            case 'q':  // quit
+                flag = FALSE;
+                break;
+        }
+    }
 }
