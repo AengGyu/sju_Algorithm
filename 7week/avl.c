@@ -10,10 +10,11 @@ typedef struct _treenode {
     int key;
 } Node;
 
-Node* makeNode() {
+Node* makeNode(int key) {
     Node* newnode = (Node*)malloc(sizeof(Node));
     newnode->leftChild = NULL;
     newnode->rightChild = NULL;
+    newnode->key = key;
     return newnode;
 }
 
@@ -28,14 +29,6 @@ void makeLeftSubTree(Node* root, Node* node) {
 void makeRightSubTree(Node* root, Node* node){
     root->rightChild = node;
 }
-
-// void changeLeftSubTree(Node* root, Node* node){
-//     root->leftChild = node;
-// }
-
-// void changeRightSubTree(Node* root, Node* node){
-//     root->rightChild = node;
-// }
 
 Node* getLeftSubTree(Node* root) { return root->leftChild; }
 
@@ -131,55 +124,44 @@ Node* rotateRL(Node* root){
     return rotateRR(pNode); // RR 회전
 }
 
-Node* reBalance(Node** root){
-    int diff = getHeightDiff(*root);
+Node* reBalance(Node* root){
+    int diff = getHeightDiff(root);
 
     if(diff > 1){ // LL or LR
-        if(getHeightDiff(getLeftSubTree(*root))>0){ // LL
-            *root = rotateLL(*root);
+        if(getHeightDiff(getLeftSubTree(root))>0){ // LL
+            root = rotateLL(root);
         }
         else{ // LR
-            *root = rotateLR(*root);
+            root = rotateLR(root);
         }
     }
     if(diff < -1){ // RR or RL
-        if(getHeightDiff(getRightSubTree(*root))<0){ // RR
-            *root = rotateRR(*root);
+        if(getHeightDiff(getRightSubTree(root))<0){ // RR
+            root = rotateRR(root);
         }
         else{ // RL
-            *root = rotateRL(*root);
+            root = rotateRL(root);
         }
     }
 
-    return *root;
+    return root;
 }
 
-void BSTInit(Node** root) { *root = NULL; }
-
-Node* BSTInsert(Node** root,int key){
-    if(*root == NULL){ // base case
-        *root = makeNode();
-        setData(*root,key);
+Node* BSTInsert(Node* root,int key){
+    if(root == NULL){
+        return makeNode(key);
     }
-    else if(key < getData(*root)){
-        Node* left = getLeftSubTree(*root);
-        BSTInsert(&left, key);
-        *root = reBalance(root);
+    if(key < getData(root)){
+        root->leftChild = BSTInsert(getLeftSubTree(root),key);
     }
-    else if(key > getData(*root)){
-        Node* right = getRightSubTree(*root);
-        BSTInsert(&right,key);
-        *root = reBalance(root);
+    else if(key > getData(root)){
+        root->rightChild = BSTInsert(getRightSubTree(root),key);
     }
-    else{
-        return NULL; // 중복 키
-    }
-
-    return *root;
+    return reBalance(root);
 }
 
 Node* BSTSearch(Node* root, int key) {
-    Node* cNode = root;
+    Node* cNode = root; 
 
     while (cNode != NULL) {
         if (getData(cNode) == key) {
@@ -193,98 +175,42 @@ Node* BSTSearch(Node* root, int key) {
     return NULL;  // no such key
 }
 
-Node* BSTRemove(Node** root, int key) {
-    Node* tmpRoot = makeNode();  // 가상 루트
-    Node* cNode = *root;         // current node
-    Node* pNode = tmpRoot;
-    Node* delNode;
-    makeRightSubTree(tmpRoot,
-                     *root);  // 가상 루트의 오른쪽 자식을 실제 루트로 지정
+Node* findMin(Node* root) {
+    while (root->leftChild != NULL) root = root->leftChild;
+    return root;
+}
 
-    while (cNode != NULL && getData(cNode) != key) {  // 삭제할 노드 찾기
-        pNode = cNode;
-
-        if (key < getData(cNode)) {
-            cNode = getLeftSubTree(cNode);
-        } else {
-            cNode = getRightSubTree(cNode);
-        }
-    }
-
-    if (cNode == NULL) { // no such key
+Node* BSTRemove(Node* root, int key){
+    if(root == NULL){
         return NULL;
     }
-    delNode = cNode;
-
-    if (getLeftSubTree(delNode) == NULL &&
-        getRightSubTree(delNode) == NULL) {  // 삭제할 노드가 자식이 없는 경우
-        if (getLeftSubTree(pNode) == delNode) {
-            removeLeftSubTree(pNode);
-        } else {
-            removeRightSubTree(pNode);
-        }
-    } else if (getLeftSubTree(delNode) == NULL ||
-               getRightSubTree(delNode) ==
-                   NULL) {  // 삭제할 노드가 자식이 하나인 경우
-        Node* dcNode;       // deleteNode 의 childNode
-
-        if (getLeftSubTree(delNode) != NULL) {  // 왼쪽 자식이 있는 경우
-            dcNode = getLeftSubTree(delNode);
-        } else {  // 오른쪽 자식이 있는 경우
-            dcNode = getRightSubTree(delNode);
-        }
-
-        if (getLeftSubTree(pNode) == delNode) {  // 삭제할 노드가 왼쪽 자식이면
-            makeLeftSubTree(pNode, dcNode);
-        } else {  // 삭제할 노드가 오른쪽 자식인 경우
-            makeRightSubTree(pNode, dcNode);
-        }
-    } else {  // 삭제할 노드의 자식이 두 개인 경우
-        Node* mNode = getRightSubTree(
-            delNode);  // 대체 노드, 삭제할 노드의 오른쪽부터 시작해서 왼쪽으로
-                       // 가서 중위후계자를 찾음
-        Node* mpNode = delNode;  // 대체 노드의 부모 노드
-        int delkey;
-
-        while (getLeftSubTree(mNode) != NULL) {  // 중위 후계자 찾기
-            mpNode = mNode;
-            mNode = getLeftSubTree(mNode);
-        }
-        delkey = getData(delNode);
-        setData(delNode,
-                getData(mNode));  // 삭제할 노드의 값을 대체 노드의 값으로 변경
-
-        if (getLeftSubTree(mpNode) == mNode) {  // 대체노드가 왼쪽 자식인 경우
-            makeLeftSubTree(mpNode, getRightSubTree(mNode));
-        } else {
-            makeRightSubTree(
-                mpNode,
-                getRightSubTree(mNode));  // 둘 다 오른쪽 서브트리를 자식으로
-                                          // 하는 이유는 왼쪽이 있었으면 중위
-                                          // 후계자 찾을 때 더 내려갔을 것임
-        }
-
-        delNode = mNode;
-        setData(delNode, delkey);
+    if(key < getData(root)){
+        root->leftChild = BSTRemove(getLeftSubTree(root),key);
     }
-
-    if (getRightSubTree(tmpRoot) != *root) {  // 루트가 바뀌었으면
-        *root = getRightSubTree(tmpRoot);     // 바뀐 루트로 변경
+    else if (key > getData(root)){
+        root->rightChild = BSTRemove(getRightSubTree(root),key);
+    }   
+    else{
+        if(getLeftSubTree(root) == NULL || getRightSubTree(root)== NULL){
+            Node* temp = (getLeftSubTree(root)) ? getLeftSubTree(root) : getRightSubTree(root);
+            free(root);
+            return temp;
+        }
+        else{
+            Node* temp = findMin(getRightSubTree(root));
+            setData(root,getData(temp));
+            root->rightChild = BSTRemove(getRightSubTree(root),getData(temp));
+        }
     }
-
-    free(tmpRoot);
-    *root = reBalance(root);
-    return delNode;
+    return reBalance(root);
 }
 
 int main() {
-    Node* root;
+    Node* root = NULL;
     Node* result;
     char cal;
     int key;
     int flag = TRUE;
-
-    BSTInit(&root);
 
     while (flag) {
         scanf("%c", &cal);
@@ -293,19 +219,19 @@ int main() {
             case 'i':  // insert
                 scanf("%d", &key);
                 getchar();
-                BSTInsert(&root, key);
+                root = BSTInsert(root, key);
                 break;
 
             case 'd':  // delete
                 scanf("%d", &key);
                 getchar();
-                result = BSTRemove(&root, key);
+                result = BSTSearch(root,key);
                 if (result == NULL) {  // no such key
                     printf("X\n");
                 } else {
-                    printf("%d\n", getData(result));
+                    printf("%d\n",key);
+                    root = BSTRemove(root,key);
                 }
-                free(result);
                 break;
 
             case 's':  // search
@@ -330,3 +256,17 @@ int main() {
         }
     }
 }
+
+/*
+i 44
+i 17
+i 78
+i 32
+i 50
+i 88
+i 48
+i 62
+s 88
+p
+q
+*/
