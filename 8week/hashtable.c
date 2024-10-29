@@ -106,6 +106,24 @@ void tableTraverse(HashTable* table){
     }
     printf("\n");
 }
+
+void listFree(Node* head){
+    Node* temp;
+    Node* cur = head;
+
+    while(cur != NULL){
+        temp = cur;
+        cur = cur->next;
+        free(temp);
+    }
+}
+void tableFree(HashTable* table){
+    for(int i=0;table->size;i++){
+        listFree(table->arr[i]);
+    }
+    free(table->arr);
+    free(table);
+}
 int main(){
     HashTable* table;
     int size;
@@ -141,4 +159,6 @@ int main(){
             break;
         }
     }
+    tableFree(table);
+    return;
 }
