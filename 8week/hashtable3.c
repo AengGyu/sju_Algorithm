@@ -10,13 +10,13 @@ typedef struct _hashTable {
     int q;
 } HashTable;
 
-HashTable* tableInit(int size,int q) {
+HashTable* tableInit(int size, int q) {
     HashTable* table = (HashTable*)malloc(sizeof(HashTable));
 
     table->size = size;
     table->q = q;
 
-    table->arr = (int*)calloc(sizeof(int), size);
+    table->arr = (int*)calloc(size, sizeof(int));
 
     return table;
 }
@@ -26,7 +26,7 @@ void tableInsert(HashTable* table, int data) {
     int hashValue = hash(data, table->size);
 
     while (table->arr[hashValue]) {  // 해당 인덱스에 값이 있으면
-        hashValue = (hashValue + hash_2(data,table->q)) % table->size;
+        hashValue = (hashValue + hash_2(data, table->q)) % table->size;
         printf("C");
     }
     printf("%d\n", hashValue);
@@ -40,7 +40,7 @@ void tableSearch(HashTable* table, int data) {
             printf("%d %d\n", hashValue, data);
             return;
         }
-        hashValue = (hashValue + hash_2(data,table->q)) % table->size;
+        hashValue = (hashValue + hash_2(data, table->q)) % table->size;
     }
     printf("-1\n");
     return;
@@ -65,7 +65,7 @@ int main() {
 
     scanf("%d %d %d", &size, &n, &q);
 
-    table = tableInit(size,q);
+    table = tableInit(size, q);
 
     while (flag) {
         scanf(" %c", &cal);

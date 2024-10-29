@@ -14,7 +14,7 @@ HashTable* tableInit(int size) {
 
     table->size = size;
 
-    table->arr = (int*)calloc(sizeof(int), size);
+    table->arr = (int*)calloc(size, sizeof(int));
 
     return table;
 }
