@@ -211,6 +211,8 @@ int main() {
                 else if (!existEdge(&graph, from, to)) {
                     addEdge(&graph, from, to, weight);
                 }
+                // changeWeight 함수를 boolean 반환형으로 만들어서 가중치를 바꾸는데 실패하면 FALSE를 반환
+                // if(!changeWeight) addEdge() , 이런식으로도 작성 가능 
                 break;
             case 'q':
                 flag = FALSE;
