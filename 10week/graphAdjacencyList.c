@@ -13,7 +13,7 @@ typedef struct _node {
 
 typedef struct _graph {
     int numOfV;   // number of vertices
-    int numOfE;   // number of edges
+    int numOfE;   // number of edges, 필요한가...
     Node** list;  // vertices array
 } Graph;
 
